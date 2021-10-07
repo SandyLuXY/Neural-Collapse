@@ -2,9 +2,10 @@ import torch
 import pickle
 import numpy as np
 from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10, MNIST
+from torchvision.datasets import CIFAR10, CIFAR100, MNIST
 import torchvision.transforms as transforms
 from torch.utils.data.sampler import SubsetRandomSampler
+
 
 class CIFAR10RandomLabels(CIFAR10):
     # Part from https://github.com/pluskid/fitting-random-labels/blob/master/cifar10_data.py
@@ -12,6 +13,7 @@ class CIFAR10RandomLabels(CIFAR10):
     ######## Need to generate a set of all randomed label first #########
     ### Check for generate_random_label.py for an example ###
     """
+
     def __init__(self, **kwargs):
         super(CIFAR10RandomLabels, self).__init__(**kwargs)
         if self.train:
@@ -23,6 +25,7 @@ class CIFAR10RandomLabels(CIFAR10):
                 test_all = pickle.load(f)
                 self.targets = test_all["label"]
 
+
 def make_dataset(dataset_name, data_dir, batch_size=128, sample_size=None, SOTA=False):
 
     if dataset_name == 'cifar10':
@@ -33,19 +36,47 @@ def make_dataset(dataset_name, data_dir, batch_size=128, sample_size=None, SOTA=
                 transforms.RandomHorizontalFlip(p=0.5),
 
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]),
-                ]))
+                transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+                                     0.2023, 0.1994, 0.2010]),
+            ]))
         else:
             trainset = CIFAR10(root=data_dir, train=True, download=True, transform=transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]),
+                transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+                                     0.2023, 0.1994, 0.2010]),
             ]))
 
         testset = CIFAR10(root=data_dir, train=False, download=True, transform=transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]),
-            ]))
+            transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[
+                                 0.2023, 0.1994, 0.2010]),
+        ]))
         num_classes = 10
+    elif dataset_name == 'cifar100':
+        print('Dataset: CIFAR100.')
+        if SOTA:
+            trainset = CIFAR100(root=data_dir, train=True, download=True, transform=transforms.Compose([
+                transforms.RandomCrop(size=32, padding=4),
+                transforms.RandomHorizontalFlip(p=0.5),
+
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5071, 0.4867, 0.4408], std=[
+                                     0.2675, 0.2565, 0.2761]),
+            ]))
+        else:
+            trainset = CIFAR100(root=data_dir, train=True, download=True, transform=transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5071, 0.4867, 0.4408], std=[
+                                     0.2675, 0.2565, 0.2761]),
+            ]))
+
+        testset = CIFAR100(root=data_dir, train=False, download=True, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5071, 0.4867, 0.4408], std=[
+                                 0.2675, 0.2565, 0.2761]),
+        ]))
+        num_classes = 100
+
     elif dataset_name == 'mnist':
         print('Dataset: MNIST.')
         trainset = MNIST(root=data_dir, train=True, download=True, transform=transforms.Compose([
@@ -53,26 +84,28 @@ def make_dataset(dataset_name, data_dir, batch_size=128, sample_size=None, SOTA=
             transforms.Resize(32),
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
-            ]))
+        ]))
 
         testset = MNIST(root=data_dir, train=False, download=True, transform=transforms.Compose([
             transforms.Grayscale(3),
             transforms.Resize(32),
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
-            ]))
+        ]))
         num_classes = 10
     elif dataset_name == 'cifar10_random':
         print('Dataset: CIFAR10 with random label.')
         trainset = CIFAR10RandomLabels(root=data_dir, train=True, download=True, transform=transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ]))
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                                 0.229, 0.224, 0.225])
+        ]))
 
         testset = CIFAR10RandomLabels(root=data_dir, train=False, download=True, transform=transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ]))
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                                 0.229, 0.224, 0.225])
+        ]))
         num_classes = 10
     else:
         raise ValueError
@@ -105,10 +138,10 @@ def make_dataset(dataset_name, data_dir, batch_size=128, sample_size=None, SOTA=
             trainset, batch_size=batch_size, sampler=SubsetRandomSampler(train_indices), num_workers=1)
 
     else:
-        trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
+        trainloader = DataLoader(
+            trainset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=4)
+    testloader = DataLoader(testset, batch_size=batch_size,
+                            shuffle=False, num_workers=4)
 
     return trainloader, testloader, num_classes
-
-
